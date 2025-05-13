@@ -3,7 +3,6 @@
 #include <bitset>
 #include "usuario.h"
 
-//Usuario::Usuario() {}
 
 void Usuario::setCedula(const std::string &ced) {
     cedula = ced;
