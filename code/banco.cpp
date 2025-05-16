@@ -1,77 +1,103 @@
-#include <iostream>
-#include <fstream>
-#include <bitset>
-#include "banco.h"
+    #include <iostream>
+    #include <fstream>
+    #include <bitset>
+    #include <string>
+    #include <sstream>
+    #include "banco.h"
 
-Banco::Banco() {}
+    Banco::Banco() {}
 
-void Banco::mostrarBienvenida() {
-    std::cout << "******************************************" << std::endl;
-    std::cout << "* Bienvenido al Banco UDEA               *" << std::endl;
-    std::cout << "******************************************" << std::endl;
-    std::cout << "Por favor, seleccione una opción:" << std::endl;
-    std::cout << "1. Entrar como Administrador" << std::endl;
-    std::cout << "2. Entrar como Usuario" << std::endl;
-    //std::cout << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
-}
-void Banco::iniciarSesion() {
-    int opcion;
-    std::cin >> opcion;
-    std::cin.ignore(); // Limpiar el buffer de entrada
-
-    if (opcion == 1) {
-        menuAdministrador();
-    } else if (opcion == 2) {
-        std::string cedula, contrasena;
-        std::cout << "Ingrese su cédula: ";
-        std::getline(std::cin, cedula);
-        std::cout << "Ingrese su contraseña: ";
-        std::getline(std::cin, contrasena);
-        /*
-        Usuario* usuario = admin.buscarUsuario(cedula);
-        if (usuario && usuario->getContrasena() == contrasena) {
-            menuUsuario(*usuario);
-        } else {
-            std::cout << "Cédula o contraseña incorrecta." << std::endl;
-        }*/
-    } else {
-        std::cout << "Opción no válida." << std::endl;
-    }
-    //std::cout << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
-}
-
-void Banco::menuUsuario(Usuario &usuario) {
-    int opcion;
-    do {
-        std::cout << "1. Consultar saldo" << std::endl;
-        std::cout << "2. Retirar dinero" << std::endl;
+    void Banco::mostrarBienvenida() {
+        std::cout << "******************************************" << std::endl;
+        std::cout << "* Bienvenido al Banco UDEA               *" << std::endl;
+        std::cout << "******************************************" << std::endl;
+        std::cout << "Por favor, seleccione una opcion:" << std::endl;
+        std::cout << "1. Entrar como Administrador" << std::endl;
+        std::cout << "2. Entrar como Usuario" << std::endl;
         std::cout << "3. Salir" << std::endl;
-        std::cin >> opcion;
-        std::cin.ignore(); // Limpiar el buffer de entrada
+    }
 
-        switch (opcion) {
-        case 1:
-            usuario.consultarSaldo();
-            break;
-        case 2: {
-            double cantidad;
-            std::cout << "Ingrese la cantidad a retirar: ";
-            std::cin >> cantidad;
-            usuario.retirarDinero(cantidad);
-            break;
+    void Banco::actualizarSaldoEnTexto(std::string &texto, const Usuario &usuario) {
+        std::istringstream iss(texto);
+        std::string nuevaData;
+        std::string linea;
+
+        // Se recorre cada línea individual del texto.
+        while (std::getline(iss, linea)) {
+            if (linea.empty())
+                continue;
+
+            std::istringstream lineaStream(linea);
+            std::string cedulaArchivo, contrasenaArchivo, saldoArchivo;
+
+            // Se extraen los tres campos usando '|' como delimitador.
+            if (std::getline(lineaStream, cedulaArchivo, '|') &&
+                std::getline(lineaStream, contrasenaArchivo, '|') &&
+                std::getline(lineaStream, saldoArchivo)) {
+
+                if (cedulaArchivo == usuario.getCedula()) {
+                    // Si la cédula coincide, armamos la línea actualizada usando el saldo actual del usuario.
+                    nuevaData += cedulaArchivo + "|" + contrasenaArchivo + "|"
+                                 + std::to_string(usuario.getSaldo()) + "\n";
+                } else {
+                    // Si no coincide, se conserva la línea sin cambios.
+                    nuevaData += linea + "\n";
+                }
+            } else {
+                // Si la línea no tiene el formato esperado, se agrega sin modificaciones.
+                nuevaData += linea + "\n";
+            }
         }
-        case 3:
-            std::cout << "Saliendo..." << std::endl;
-            break;
-        default:
-            std::cout << "Opción no válida." << std::endl;
-        }
-    } while (opcion != 3);
-    //std::cout << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
-}
+
+        // Se actualiza la variable 'texto' con el contenido modificado.
+        texto = nuevaData;
+    }
+
+    std::string Banco::iniciarSesion(std::string texto,const int& m, const int& n) {
+        int opcion;
+        do {
+            mostrarBienvenida();
+            std::cin >> opcion;
+
+            if (opcion == 1) {
+                std::string contrasenaAdmin;
+                std::cout << "Ingrese su contrasena: ";
+                std::cin >> contrasenaAdmin;
+                if (admin.verificarContrasena("sudo.txt", contrasenaAdmin)) {
+                    menuAdministrador(texto);
+                } else {
+                    std::cout << "Contrasena incorrecta" << std::endl;
+                }
+            }
+            else if (opcion == 2) {
+                std::string cedula, contrasena;
+                std::cout << "Ingrese su cedula: ";
+                std::cin >> cedula;
+                std::cout << "Ingrese su contrasena: ";
+                std::cin >> contrasena;
+
+                // obtenerSaldo actualiza internamente el saldo del usuario mediante setSaldo.
+                std::string saldoLeido = usuario.obtenerSaldo(texto, contrasena, cedula);
+                if (!saldoLeido.empty()) {
+                    // Ya que el saldo se actualizó internamente, se llama directamente al menú del usuario.
+                    admin.menuUsuario(usuario);
+                    actualizarSaldoEnTexto(texto, usuario);
+                } else {
+                    std::cout << "Cedula o contrasena incorrecta." << std::endl;
+                }
+            }
+            else if (opcion == 3) {
+                std::cout << "Saliendo..." << std::endl;
+            }
+            else {
+                std::cout << "Opcion no valida." << std::endl;
+            }
+        } while (opcion != 3);
+        return texto;
+    }
 
 
-void Banco::menuAdministrador() {
+void Banco::menuAdministrador( std::string& texto) {
     int opcion;
     do {
         std::cout << "1. Crear usuario" << std::endl;
@@ -80,22 +106,15 @@ void Banco::menuAdministrador() {
 
         switch (opcion) {
         case 1: {
-            std::string cedula, contrasena;
-            double saldo;
-            std::cout << "Ingrese la cédula: ";
-            std::getline(std::cin, cedula);
-            std::cout << "Ingrese la contraseña: ";
-            std::getline(std::cin, contrasena);
-            std::cout << "Ingrese el saldo inicial: ";
-            std::cin >> saldo;
-            //admin.agregarDatos();
+            admin.agregarDatos(texto);
             break;
         }
         case 2:
             std::cout << "Saliendo..." << std::endl;
+            //escribir el texto otra vez a un archivo binario
             break;
         default:
-            std::cout << "Opción no válida." << std::endl;
+            std::cout << "Opcion no valida." << std::endl;
         }
     } while (opcion != 2);
     std::cout << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
@@ -193,7 +212,6 @@ std::string Banco::deBinarioATexto(const std::string& binario) { //toma un strin
         bitCount++;
         if (bitCount == 8) {
             texto += caracter; // Añadir el carácter al texto
-            //std::cout<<"caracter Despues "<<caracter<<std::endl;
             caracter = 0; // Reiniciar el carácter
             bitCount = 0; // Reiniciar el contador de bits
         }
@@ -202,7 +220,91 @@ std::string Banco::deBinarioATexto(const std::string& binario) { //toma un strin
     return texto;
 }
 
-void Banco::escribirArchivoBinario(const std::string& nombreArchivoTexto,const std::string& nombreArchivoBinario){ //abre un archivo de texto, lo decodifica y crea un archivo binario con su contenido
+
+
+void Banco::escribirArchivoBinario(const std::string& nombreArchivoTexto,const std::string& nombreArchivoBinario,const int& m,const int& n){ //abre un archivo de texto, lo decodifica y crea un archivo binario con su contenido
+    // Abrir el archivo de texto en modo lectura
+    std::ifstream archivo_texto(nombreArchivoTexto);
+    if (!archivo_texto.is_open()) {std::cerr << "No se pudo abrir el archivo de texto." << std::endl;
+        return;
+    }
+
+    // Crear el archivo binario en modo escritura
+    std::ofstream archivo_binario(nombreArchivoBinario, std::ios::binary);
+    if (!archivo_binario.is_open()) {std::cerr << "No se pudo crear el archivo binario." << std::endl;
+        return;
+    }
+
+    // Leer el contenido del archivo de texto en un string
+    std::string contenidoTexto;
+    char caracter;
+    while (archivo_texto.get(caracter)) {
+        contenidoTexto += caracter;
+    }
+    archivo_texto.close();
+
+    // Convertir el contenido del texto a binario
+    std::string stringBits = deTextoABinario(contenidoTexto);
+
+    //decodificar contenido
+    std::string stringBitsCodificado=codificar(stringBits,m,n); //se codifica y se guarda el contenido en bits
+
+    //Escribir archivo
+    if (archivo_binario.is_open()) {
+        archivo_binario.write(stringBitsCodificado.c_str(), stringBitsCodificado.size());
+    }
+
+    // Cerrar los archivos
+    archivo_texto.close();
+    archivo_binario.close();
+
+    std::cout << "El archivo de texto "<<nombreArchivoTexto<< " ha sido convertido a binario y se guardo en el archivo binario " <<nombreArchivoBinario<< std::endl;
+    std::cout << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
+}
+
+
+
+
+std::string Banco::leerArchivoBinario(const std::string& nombreArchivo,const int& m, const int& n) { //toma un archivo binario codificado y retorna su contenido en texto
+    std::ifstream inFile(nombreArchivo, std::ios::binary);
+    if (!inFile.is_open()) {
+        std::cerr << "No se pudo abrir el archivo." << std::endl;
+        return "";
+    }
+
+    std::string contenido;
+    char caracter;
+    while (inFile.get(caracter)) {
+        contenido += caracter;
+    }
+
+    inFile.close();
+
+    /*std::string aux=deCodificar(contenido,m);
+    std::string contAux=deBinarioATexto(contenido);
+    std::cout<<contAux<<std::endl;*/
+    std::string contenidoDeCodificado=deCodificar(contenido,m,n); //se decodifica para leer su cotenido
+    std::string texto = deBinarioATexto(contenidoDeCodificado);
+
+    return texto;
+}
+
+void Banco::rescribirArchivoBinario(std::string contenido,const std::string& nombreArchivoBinario,const int& m, const int& n){ //toma un texto normal y lo codifica a binario
+    std::string binario=deTextoABinario(contenido);
+    std::string binarioCodificado=codificar(binario,m,n);   //codificación
+    std::ofstream archivo_binario(nombreArchivoBinario, std::ios::binary);
+    if (!archivo_binario.is_open()) {
+        std::cerr << "No se pudo abrir el archivo." << std::endl;
+        return ;
+    }
+
+    archivo_binario.write(binarioCodificado.c_str(), binarioCodificado.size());
+    archivo_binario.close();
+}
+
+/*
+
+void Banco::escribirArchivoBinario(const std::string& nombreArchivoTexto,const std::string& nombreArchivoBinario){ //abre un archivo de texto y crea un archivo binario con su contenido
     // Abrir el archivo de texto en modo lectura
     std::ifstream archivo_texto(nombreArchivoTexto);
     if (!archivo_texto.is_open()) {std::cerr << "No se pudo abrir el archivo de texto." << std::endl;
@@ -239,91 +341,19 @@ void Banco::escribirArchivoBinario(const std::string& nombreArchivoTexto,const s
     std::cout << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
 }
 
-void Banco::escribirArchivoBinario(const std::string& nombreArchivoTexto,const std::string& nombreArchivoBinario,const int& m,const int& n){ //abre un archivo de texto, lo decodifica y crea un archivo binario con su contenido
-    // Abrir el archivo de texto en modo lectura
-    std::ifstream archivo_texto(nombreArchivoTexto);
-    if (!archivo_texto.is_open()) {std::cerr << "No se pudo abrir el archivo de texto." << std::endl;
-        return;
-    }
-
-    // Crear el archivo binario en modo escritura
+void Banco::rescribirArchivoBinario(std::string contenidoTexto,const std::string& nombreArchivoBinario){ //toma un texto y lo escribe en binario
+    std::string binario=deTextoABinario(contenidoTexto);
     std::ofstream archivo_binario(nombreArchivoBinario, std::ios::binary);
-    if (!archivo_binario.is_open()) {std::cerr << "No se pudo crear el archivo binario." << std::endl;
-        return;
+    if (!archivo_binario.is_open()) {
+        std::cerr << "No se pudo abrir el archivo." << std::endl;
+        return ;
     }
 
-    // Leer el contenido del archivo de texto en un string
-    std::string contenidoTexto;
-    char caracter;
-    while (archivo_texto.get(caracter)) {
-        contenidoTexto += caracter;
-    }
-    archivo_texto.close();
-
-    // Convertir el contenido del texto a binario
-    std::string stringBits = deTextoABinario(contenidoTexto);
-
-    //decodificar contenido
-    std::string stringBitsCodificado=deCodificar(stringBits,m,n); //el archivo ya esta codificado, se necesita decodificar
-
-    //Escribir archivo
-    if (archivo_binario.is_open()) {
-        archivo_binario.write(stringBitsCodificado.c_str(), stringBitsCodificado.size());
-    }
-
-    // Cerrar los archivos
-    archivo_texto.close();
+    archivo_binario.write(binario.c_str(), binario.size());
     archivo_binario.close();
-
-    std::cout << "El archivo de texto "<<nombreArchivoTexto<< " ha sido convertido a binario y se guardo en el archivo binario " <<nombreArchivoBinario<< std::endl;
-    std::cout << std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl<< std::endl;
 }
 
-std::string Banco::leerArchivoBinario(const std::string& nombreArchivo) { //toma un archivo binario y retorna su contenido en texto
-    std::ifstream inFile(nombreArchivo, std::ios::binary);
-    if (!inFile.is_open()) {
-        std::cerr << "No se pudo abrir el archivo." << std::endl;
-        return "";
-    }
 
-    std::string contenido;
-    char caracter;
-    while (inFile.get(caracter)) {
-        contenido += caracter;
-    }
-
-    inFile.close();
-
-    std::string contAux=deBinarioATexto(contenido);
-    std::cout<<contAux<<std::endl;
-
-
-    return contAux;
-}
-
-std::string Banco::leerArchivoBinario(const std::string& nombreArchivo,const int& m, const int& n) { //toma un archivo binario y retorna su contenido en texto
-    std::ifstream inFile(nombreArchivo, std::ios::binary);
-    if (!inFile.is_open()) {
-        std::cerr << "No se pudo abrir el archivo." << std::endl;
-        return "";
-    }
-
-    std::string contenido;
-    char caracter;
-    while (inFile.get(caracter)) {
-        contenido += caracter;
-    }
-
-    inFile.close();
-
-    //std::string aux=deCodificar(contenido,m);
-    std::string contAux=deBinarioATexto(contenido);
-    std::cout<<contAux<<std::endl;
-    std::string contenidoCodificado=codificar(contenido,m,n);
-    std::string texto = deBinarioATexto(contenidoCodificado);
-
-    return texto;
-}
 
 void Banco::escribirArchivoTexto(const std::string archivoBinario, const std::string archivoTexto) { //recibe un archivo binario y escribe su representacion en un archivo de texto
     // Leer el contenido del archivo binario
@@ -358,3 +388,26 @@ void Banco::escribirArchivoTexto(const std::string archivoBinario, const std::st
     archivo_texto.close();
 
 }
+
+ * std::string Banco::leerArchivoBinario(const std::string& nombreArchivo) { //toma un archivo binario sin codificar y retorna su contenido en texto
+    std::ifstream inFile(nombreArchivo, std::ios::binary);
+    if (!inFile.is_open()) {
+        std::cerr << "No se pudo abrir el archivo." << std::endl;
+        return "";
+    }
+
+    std::string contenido;
+    char caracter;
+    while (inFile.get(caracter)) {
+        contenido += caracter;
+    }
+
+    inFile.close();
+
+    std::string contAux=deBinarioATexto(contenido);
+    //std::cout<<contAux<<std::endl;
+
+
+    return contAux;
+}
+*/

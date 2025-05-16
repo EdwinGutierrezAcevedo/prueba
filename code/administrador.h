@@ -3,17 +3,16 @@
 #include "usuario.h"
 class Administrador
 {
-    std::string contrasena;
-
-    Usuario usuario;
+    std::string contrasenaAdmin;
 
 
 public:
     Administrador();
-    std::string getContrasena() const;
+    std::string getContrasenaAdmin() const;
 
     void agregarDatos(std::string &original);
+    bool verificarContrasena(const std::string& archivo, const std::string& contraseña);
+    void menuUsuario(Usuario &usuario);
 };
 
 #endif // ADMINISTRADOR_H
-
