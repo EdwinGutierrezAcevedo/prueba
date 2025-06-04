@@ -1,100 +1,94 @@
-    #include <iostream>
-    #include <fstream>
-    #include <bitset>
-    #include <string>
-    #include <sstream>
-    #include "banco.h"
+#include <iostream>
+#include <fstream>
+#include <bitset>
+#include <string>
+#include <sstream>
+#include "banco.h"
+Banco::Banco() {}
 
-    Banco::Banco() {}
+void Banco::mostrarBienvenida() {
+    std::cout << "******************************************" << std::endl;
+    std::cout << "* Bienvenido al Banco UDEA               *" << std::endl;
+    std::cout << "******************************************" << std::endl;
+    std::cout << "Por favor, seleccione una opcion:" << std::endl;
+    std::cout << "1. Entrar como Administrador" << std::endl;
+    std::cout << "2. Entrar como Usuario" << std::endl;
+    std::cout << "3. Salir" << std::endl;
+}
 
-    void Banco::mostrarBienvenida() {
-        std::cout << "******************************************" << std::endl;
-        std::cout << "* Bienvenido al Banco UDEA               *" << std::endl;
-        std::cout << "******************************************" << std::endl;
-        std::cout << "Por favor, seleccione una opcion:" << std::endl;
-        std::cout << "1. Entrar como Administrador" << std::endl;
-        std::cout << "2. Entrar como Usuario" << std::endl;
-        std::cout << "3. Salir" << std::endl;
-    }
-
-    void Banco::actualizarSaldoEnTexto(std::string &texto, const Usuario &usuario) {
-        std::istringstream iss(texto);
-        std::string nuevaData;
-        std::string linea;
-
-        // Se recorre cada línea individual del texto.
-        while (std::getline(iss, linea)) {
-            if (linea.empty())
-                continue;
-
-            std::istringstream lineaStream(linea);
-            std::string cedulaArchivo, contrasenaArchivo, saldoArchivo;
-
-            // Se extraen los tres campos usando '|' como delimitador.
-            if (std::getline(lineaStream, cedulaArchivo, '|') &&
-                std::getline(lineaStream, contrasenaArchivo, '|') &&
-                std::getline(lineaStream, saldoArchivo)) {
-
-                if (cedulaArchivo == usuario.getCedula()) {
-                    // Si la cédula coincide, armamos la línea actualizada usando el saldo actual del usuario.
-                    nuevaData += cedulaArchivo + "|" + contrasenaArchivo + "|"
-                                 + std::to_string(usuario.getSaldo()) + "\n";
-                } else {
-                    // Si no coincide, se conserva la línea sin cambios.
-                    nuevaData += linea + "\n";
-                }
+void Banco::actualizarSaldoEnTexto(std::string &texto, const Usuario &usuario) {
+    std::istringstream iss(texto);
+    std::string nuevaData;
+    std::string linea;
+    // Se recorre cada línea individual del texto.
+    while (std::getline(iss, linea)) {
+       if (linea.empty())
+            continue;
+        std::istringstream lineaStream(linea);
+        std::string cedulaArchivo, contrasenaArchivo, saldoArchivo;
+        // Se extraen los tres campos usando '|' como delimitador.
+        if (std::getline(lineaStream, cedulaArchivo, '|') &&
+            std::getline(lineaStream, contrasenaArchivo, '|') &&
+            std::getline(lineaStream, saldoArchivo)) {
+            if (cedulaArchivo == usuario.getCedula()) {
+                // Si la cédula coincide, armamos la línea actualizada usando el saldo actual del usuario.
+                nuevaData += cedulaArchivo + "|" + contrasenaArchivo + "|"
+                             + std::to_string(usuario.getSaldo()) + "\n";
             } else {
-                // Si la línea no tiene el formato esperado, se agrega sin modificaciones.
+                // Si no coincide, se conserva la línea sin cambios.
                 nuevaData += linea + "\n";
             }
+        } else {
+            // Si la línea no tiene el formato esperado, se agrega sin modificaciones.
+            nuevaData += linea + "\n";
         }
-
-        // Se actualiza la variable 'texto' con el contenido modificado.
-        texto = nuevaData;
     }
 
-    std::string Banco::iniciarSesion(std::string texto,const int& m, const int& n) {
-        int opcion;
-        do {
-            mostrarBienvenida();
-            std::cin >> opcion;
+    // Se actualiza la variable 'texto' con el contenido modificado.
+    texto = nuevaData;
+}
 
-            if (opcion == 1) {
-                std::string contrasenaAdmin;
-                std::cout << "Ingrese su contrasena: ";
-                std::cin >> contrasenaAdmin;
-                if (admin.verificarContrasena("sudo.txt", contrasenaAdmin)) {
-                    menuAdministrador(texto);
-                } else {
-                    std::cout << "Contrasena incorrecta" << std::endl;
-                }
-            }
-            else if (opcion == 2) {
-                std::string cedula, contrasena;
-                std::cout << "Ingrese su cedula: ";
-                std::cin >> cedula;
-                std::cout << "Ingrese su contrasena: ";
-                std::cin >> contrasena;
+std::string Banco::iniciarSesion(std::string &texto, std::string textoUser, const int& m, const int& n) {
+    int opcion;
+    do {
+        mostrarBienvenida();
+        std::cin >> opcion;
+        if (opcion == 1) {
+            std::string contrasenaAdmin;
+            std::cout << "Ingrese su contrasena: ";
+            std::cin >> contrasenaAdmin;
+            if (admin.verificarContrasena(textoUser, contrasenaAdmin)) {
+                menuAdministrador(texto);
+             } else {
+                std::cout << "Contrasena incorrecta" << std::endl;
+             }
+        }
+        else if (opcion == 2) {
+            std::string cedula, contrasena;
+            std::cout << "Ingrese su cedula: ";
+            std::cin >> cedula;
+            std::cout << "Ingrese su contrasena: ";
+            std::cin >> contrasena;
 
-                // obtenerSaldo actualiza internamente el saldo del usuario mediante setSaldo.
-                std::string saldoLeido = usuario.obtenerSaldo(texto, contrasena, cedula);
-                if (!saldoLeido.empty()) {
-                    // Ya que el saldo se actualizó internamente, se llama directamente al menú del usuario.
-                    admin.menuUsuario(usuario);
-                    actualizarSaldoEnTexto(texto, usuario);
-                } else {
-                    std::cout << "Cedula o contrasena incorrecta." << std::endl;
-                }
+            // obtenerSaldo actualiza internamente el saldo del usuario mediante setSaldo.
+            std::string saldoLeido = usuario.obtenerSaldo(texto, contrasena, cedula);
+            if (!saldoLeido.empty()) {
+                // Ya que el saldo se actualizó internamente, se llama directamente al menú del usuario.
+                admin.menuUsuario(usuario);
+                actualizarSaldoEnTexto(texto, usuario);
+            } else {
+                std::cout << "Cedula o contrasena incorrecta." << std::endl;
             }
-            else if (opcion == 3) {
-                std::cout << "Saliendo..." << std::endl;
-            }
-            else {
-                std::cout << "Opcion no valida." << std::endl;
-            }
-        } while (opcion != 3);
-        return texto;
-    }
+        }
+        else if (opcion == 3) {
+            std::cout << "Saliendo..." << std::endl;
+        }
+        else {
+            std::cout << "Opcion no valida." << std::endl;
+        }
+    } while (opcion != 3);
+    return texto;
+}
 
 
 void Banco::menuAdministrador( std::string& texto) {

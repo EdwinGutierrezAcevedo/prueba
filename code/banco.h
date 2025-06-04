@@ -11,12 +11,14 @@ class Banco
     std::string deCodificacion1(std::string copiaOriginal,const int& n);
     std::string codificacion2(std::string original, const int &n);
     std::string deCodificacion2(std::string original,const int& n);
+    std::string texto;
+    std::string textoUser;
 
 public:
     Banco();
     void mostrarBienvenida();
     void actualizarSaldoEnTexto(std::string &texto, const Usuario &usuario);
-    std::string iniciarSesion(std::string texto, const int &m, const int &n);
+    std::string iniciarSesion(std::string &texto, std::string textoUser, const int &m, const int &n);
     //void menuUsuario(Usuario &usuario);
     void menuAdministrador(std::string &texto);
     std::string codificar(std::string original, const int &m, const int &n);
