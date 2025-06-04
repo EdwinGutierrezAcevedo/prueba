@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <bitset>
+#include <sstream>
 #include "administrador.h"
 
 Administrador::Administrador() {}
@@ -21,20 +22,18 @@ void Administrador::agregarDatos(std::string &original) {
     std::cin>>contrasena;
     std::cout << "Ingrese su saldo: "<<std::endl;
     std::cin>>saldo;
+    original +=+
+                "\n";
     original += cedula + "|" + contrasena + "|" + saldo + "\n";
     std::cout<<"Usuario creado"<<std::endl;
 }
 
 
-bool Administrador::verificarContrasena(const std::string& archivo, const std::string& contraseña) {
-    std::ifstream file(archivo);
-    if (!file) {
-        std::cerr << "Error: No se pudo abrir el archivo." << std::endl;
-        return false;
-    }
-
+bool Administrador::verificarContrasena(const std::string& datos, const std::string& contraseña) {
+    std::istringstream stream(datos);  // Convertimos el string en un flujo de entrada
     std::string linea;
-    while (std::getline(file, linea)) {
+
+    while (std::getline(stream, linea)) {
         if (linea == contraseña) {
             return true;
         }
@@ -42,6 +41,7 @@ bool Administrador::verificarContrasena(const std::string& archivo, const std::s
 
     return false;
 }
+
 
 
 void Administrador::menuUsuario(Usuario &usuario) {

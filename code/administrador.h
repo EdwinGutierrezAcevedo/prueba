@@ -11,7 +11,7 @@ public:
     std::string getContrasenaAdmin() const;
 
     void agregarDatos(std::string &original);
-    bool verificarContrasena(const std::string& archivo, const std::string& contraseña);
+    bool verificarContrasena(const std::string& datos, const std::string& contraseña);
     void menuUsuario(Usuario &usuario);
 };
 

@@ -11,9 +11,13 @@ int main() {
     std::cout<<"Introduzca la semilla: "<<std::endl;
     std::cin>>n;
     std::string texto;
-    banco.escribirArchivoBinario("sudo.txt", "sudo_binario.bin",m,n); //toma un txt normal y crea un binario codificado
+    std::string textoUser;
+    //banco.escribirArchivoBinario("sudo.txt", "sudo_binario.bin",m,n); //toma un txt normal y crea un binario codificado
     texto=banco.leerArchivoBinario("archivo_binario_usuario.bin",m,n); //toma un binario, lo codifica y retorna un texto
-    texto=banco.iniciarSesion(texto,m,n);
+    //banco.escribirArchivoBinario("archivo_usuario.txt", "archivo_binario_usuario.bin",m,n); //toma un txt normal y crea un binario codificado
+    textoUser=banco.leerArchivoBinario("sudo_binario.bin",m,n); //toma un binario, lo codifica y retorna un texto
+    texto=banco.iniciarSesion(texto,textoUser,m,n);
+
     banco.rescribirArchivoBinario(texto,"archivo_binario_usuario.bin",m,n);//toma un texto normal y lo codifica a binario
     return 0;
 }
